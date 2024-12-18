@@ -5,10 +5,11 @@ import com.mikuac.shiro.dto.event.message.AnyMessageEvent;
 import com.nyx.bot.data.WarframeDataSource;
 import com.nyx.bot.enums.Codes;
 import com.nyx.bot.plugin.warframe.utils.RivenDispositionUpdates;
-import com.nyx.bot.utils.FileUtils;
 import com.nyx.bot.utils.SystemInfoUtils;
 import com.nyx.bot.utils.UpdateJarUtils;
 import com.nyx.bot.utils.gitutils.GitHubUtil;
+
+import java.util.concurrent.CompletableFuture;
 
 public class UpdatePlugin {
 
@@ -38,18 +39,38 @@ public class UpdatePlugin {
 
 
     private static void updateHtml(Bot bot, AnyMessageEvent event) {
-        WarframeDataSource.cloneDataSource();
         bot.sendMsg(event, "已发布任务，正在更新！", false);
+        CompletableFuture.supplyAsync(WarframeDataSource::cloneDataSource).thenAccept(flag -> {
+            if (flag) {
+                bot.sendMsg(event, "HTML模板，更新成功！", false);
+            } else {
+                bot.sendMsg(event, "HTML模板，更新失败！", false);
+            }
+        });
     }
 
     private static void updateWarframeResMarketItems(Bot bot, AnyMessageEvent event) {
-        WarframeDataSource.getMarket();
         bot.sendMsg(event, "已发布任务，正在更新！", false);
+        CompletableFuture.supplyAsync(WarframeDataSource::getMarket)
+                .thenAccept(items -> {
+                    if (items != -1) {
+                        bot.sendMsg(event, "Market 已更新：" + items + " 条数据！", false);
+                    } else {
+                        bot.sendMsg(event, "Market 更新失败！", false);
+                    }
+                });
     }
 
     private static void updateWarframeResMarketRiven(Bot bot, AnyMessageEvent event) {
-        WarframeDataSource.getRivenWeapons();
         bot.sendMsg(event, "已发布任务，正在更新！", false);
+        CompletableFuture.supplyAsync(WarframeDataSource::getRivenWeapons)
+                .thenAccept(items -> {
+                    if (items != -1) {
+                        bot.sendMsg(event, "WM紫卡 已更新：" + items + " 条数据！", false);
+                    } else {
+                        bot.sendMsg(event, "WM紫卡 更新失败！", false);
+                    }
+                });
     }
 
     private static void updateWarframeResRm(Bot bot, AnyMessageEvent event) {
@@ -58,18 +79,39 @@ public class UpdatePlugin {
 
     private static void updateWarframeRivenChanges(Bot bot, AnyMessageEvent event) {
         bot.sendMsg(event, "已发布任务，正在更新！", false);
-        new RivenDispositionUpdates().upRivenTrend();
+        CompletableFuture.supplyAsync(() -> new RivenDispositionUpdates().upRivenTrend())
+                .thenAccept(items -> {
+                    if (items != -1) {
+                        bot.sendMsg(event, "紫卡倾向变动 已更新：" + items + " 条数据！", false);
+                    } else {
+                        bot.sendMsg(event, "紫卡倾向变动 更新失败！", false);
+                    }
+                });
     }
 
     private static void updateWarframeSister(Bot bot, AnyMessageEvent event) {
-        WarframeDataSource.getWeapons();
         bot.sendMsg(event, "已发布任务，正在更新！", false);
+        CompletableFuture.supplyAsync(WarframeDataSource::getWeapons)
+                .thenAccept(items -> {
+                    if (items != -1) {
+                        bot.sendMsg(event, "信条/赤毒武器 已更新：" + items + " 条数据！", false);
+                    } else {
+                        bot.sendMsg(event, "信条/赤毒武器 更新失败！", false);
+                    }
+                });
     }
 
     private static void updateWarframeTar(Bot bot, AnyMessageEvent event) {
-        WarframeDataSource.cloneDataSource();
-        WarframeDataSource.initTranslation();
         bot.sendMsg(event, "已发布任务，正在更新！", false);
+        CompletableFuture.supplyAsync(WarframeDataSource::cloneDataSource).thenAccept(flag -> {
+            if (flag) {
+                CompletableFuture.allOf(CompletableFuture.supplyAsync(WarframeDataSource::initTranslation)).thenAccept(items ->
+                        bot.sendMsg(event, "翻译数据，已更新： " + items + " 条数据！", false)
+                );
+            } else {
+                bot.sendMsg(event, "翻译数据，更新失败！", false);
+            }
+        });
     }
 
     private static void updateJar(Bot bot, AnyMessageEvent event) {
@@ -84,10 +126,14 @@ public class UpdatePlugin {
             bot.sendMsg(event, "当前版本：" + lodeVersion + "，最新版本：" + latestTagName + "，正在准备更新！", false);
             String body = GitHubUtil.getBody();
             bot.sendMsg(event, "最新版本更新日志：" + body, false);
-            bot.sendMsg(event, "正在更新，请稍后...", false);
-            String path = "./tmp/NyxBot.jar";
-            FileUtils.writeToFile(GitHubUtil.getLatestZip(), path);
-            new UpdateJarUtils().restartUpdate("NyxBot.jar");
+            bot.sendMsg(event, "正在更新，请稍后...\n若长时间没有反应，请手动更新或者回退版本。\n备份文件在backup目录中。", false);
+            if (GitHubUtil.getLatestZip("./tmp/NyxBot.jar")) {
+                bot.sendMsg(event, "更新成功，正在重启！", false);
+                new UpdateJarUtils().restartUpdate("NyxBot.jar");
+            } else {
+                bot.sendMsg(event, "更新失败，请手动更新！", false);
+            }
+
         }
     }
 }

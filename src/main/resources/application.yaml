@@ -13,6 +13,8 @@ async:
         prefix: async-
 
 spring:
+  profiles:
+    active: server
   main:
     allow-circular-references: true
   mvc:
@@ -87,6 +89,7 @@ server:
   shutdown: graceful
 logging:
   level:
+    com.nyx.bot: DEBUG
     io.github.mymonstercat: OFF
     org.xhtmlrenderer: OFF
     org.xnio.listener: OFF

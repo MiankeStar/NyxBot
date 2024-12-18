@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Controller
 @RequestMapping("/data/warframe/alias")
@@ -35,14 +37,17 @@ public class AliasController extends BaseController {
     @PostMapping("/list")
     @ResponseBody
     public ResponseEntity<?> list(Alias alias) {
-        return getDataTable(repository.findAll(PageRequest.of(alias.getPageNum() - 1, alias.getPageSize())));
+        return getDataTable(repository.findByLikeCn(alias.getCn().isEmpty() ? null : alias.getCn(), PageRequest.of(alias.getPageNum() - 1, alias.getPageSize())));
     }
 
     @PostMapping("/update")
     @ResponseBody
     public AjaxResult update() {
-        WarframeDataSource.cloneDataSource();
-        WarframeDataSource.getAlias();
+        CompletableFuture.supplyAsync(WarframeDataSource::cloneDataSource).thenAccept(flag -> {
+            if (flag) {
+                CompletableFuture.runAsync(WarframeDataSource::getAlias);
+            }
+        });
         return success("已执行任务！");
     }
 
@@ -69,8 +74,8 @@ public class AliasController extends BaseController {
         if (a.getEn().trim().isEmpty()) {
             return error("英文不能为空！");
         }
-        Alias byCnAndEn = repository.findByCnAndEn(a.getCn(), a.getEn());
-        if (byCnAndEn != null) {
+        Optional<Alias> alias = repository.findByCnAndEn(a.getCn(), a.getEn());
+        if (alias.isPresent()) {
             return error("该别名已存在！");
         }
         repository.save(a);

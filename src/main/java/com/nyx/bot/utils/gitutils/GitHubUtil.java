@@ -3,7 +3,6 @@ package com.nyx.bot.utils.gitutils;
 import com.alibaba.fastjson2.JSON;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.nyx.bot.core.ApiUrl;
 import com.nyx.bot.enums.HttpCodeEnum;
 import com.nyx.bot.utils.http.HttpUtils;
 import lombok.Data;
@@ -25,6 +24,7 @@ public class GitHubUtil {
     public static Release getReleasesLatestVersion(String repoName, String depot) {
         HttpUtils.Body latest = HttpUtils.sendGet("https://api.github.com/repos/" + repoName + "/" + depot + "/releases/latest");
         if (!latest.getCode().equals(HttpCodeEnum.SUCCESS)) {
+            System.out.println(latest);
             return null;
         }
         return JSON.parseObject(latest.getBody(), Release.class);
@@ -71,22 +71,10 @@ public class GitHubUtil {
     /**
      * 获取最新版本压缩包
      *
-     * @return byte[]
+     * @return Boolean 是否完成
      */
-    public static byte[] getLatestZip() {
-        String url = getLatestDownLoadUrl();
-        HttpUtils.Body body = HttpUtils.sendGetForFile(url);
-        assert body != null;
-        if (!body.getCode().equals(HttpCodeEnum.SUCCESS)) {
-            for (String s : ApiUrl.GIT_HUB_SPEED) {
-                body = HttpUtils.sendGetForFile(s + url);
-                assert body != null;
-                if (body.getCode().equals(HttpCodeEnum.SUCCESS)) {
-                    break;
-                }
-            }
-        }
-        return body.getFile();
+    public static Boolean getLatestZip(String path) {
+        return HttpUtils.sendGetForFile(getLatestDownLoadUrl(), path);
     }
 
     /**

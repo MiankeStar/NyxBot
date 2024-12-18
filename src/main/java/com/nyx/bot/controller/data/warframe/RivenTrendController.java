@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Controller
 @RequestMapping("/data/warframe/rivenTrend")
@@ -67,7 +68,7 @@ public class RivenTrendController extends BaseController {
     @PostMapping("/list")
     @ResponseBody
     public ResponseEntity<?> list(RivenTrend rt) {
-        return getDataTable(repository.findAllPageable(rt.getTrendName(),
+        return getDataTable(repository.findAllPageable(rt.getTrendName().isEmpty() ? null : rt.getTrendName(),
                 PageRequest.of(
                         rt.getPageNum() - 1,
                         rt.getPageSize()
@@ -79,8 +80,11 @@ public class RivenTrendController extends BaseController {
     @PostMapping("/init")
     @ResponseBody
     public AjaxResult init() {
-        WarframeDataSource.cloneDataSource();
-        WarframeDataSource.getRivenTrend();
+        CompletableFuture.supplyAsync(WarframeDataSource::cloneDataSource).thenAccept(flag -> {
+            if (flag) {
+                CompletableFuture.runAsync(WarframeDataSource::getRivenTrend);
+            }
+        });
         return success("已执行任务！");
     }
 

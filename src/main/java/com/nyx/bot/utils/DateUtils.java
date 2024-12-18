@@ -157,6 +157,20 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
     }
 
     /**
+     * 取两个时间相差的秒
+     *
+     * @param endDate 结束时间
+     * @param nowDate 现在的时间
+     * @return 相差的秒数
+     */
+    public static long getDateSecond(Date endDate, Date nowDate) {
+        // 获得两个时间的毫秒时间差异
+        long diff = endDate.getTime() - nowDate.getTime();
+        // 计算差多少秒//输出结果
+        return diff % DAYS % HOURS % MINUTES / SECONDS;
+    }
+
+    /**
      * 日期型字符串转化为日期 格式
      */
     public static Date parseDate(Object str) {
@@ -177,7 +191,6 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
      * @param now    当前时间
      * @param field  要增加的类型 如 天 时 分 秒
      * @param amount 要增加的时间
-     * @return
      */
     public static String getDateWeek(Date old, Date now, int field, int amount) {
         Calendar calendar = new GregorianCalendar();

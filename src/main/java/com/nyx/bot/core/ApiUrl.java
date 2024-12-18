@@ -10,7 +10,7 @@ import okhttp3.Headers;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 
 public class ApiUrl {
@@ -34,19 +34,6 @@ public class ApiUrl {
             "https://gitlab.com/KingPrimes/DataSource",
             "https://gitee.com/KingPrime/DataSource"
     );
-
-
-    /**
-     * 国内 GIT HUB　加速
-     */
-    public static final List<String> GIT_HUB_SPEED = List.of(
-            "https://gh.api.99988866.xyz/",
-            "https://ghproxy.github.io/",
-            "https://gh.jasonzeng.dev/",
-            "https://github.moeyy.xyz/",
-            "https://github.geekery.cn/"
-    );
-
 
     /**
      * 赤毒幻纹
@@ -78,6 +65,8 @@ public class ApiUrl {
      */
     public static final String WARFRAME_MARKET_SISTER_WEAPONS = "https://api.warframe.market/v1/sister/weapons";
 
+    public static final String WARFRAME_RELICS_DATA = "https://drops.warframestat.us/data/relics.json";
+
     public static final String WARFRAME_ARBITRATION = "https://wf.555590.xyz/api/arbys";
 
 
@@ -100,11 +89,12 @@ public class ApiUrl {
      */
     public static GlobalStates.Arbitration arbitrationPre() {
         List<ArbitrationPre> arbitrationPres = JSON.parseArray(HttpUtils.sendGet(WARFRAME_ARBITRATION).getBody(), ArbitrationPre.class, JSONReader.Feature.SupportSmartMatch);
+        // 指定获取东八区日期
         LocalDateTime now = LocalDateTime.now(ZoneOffset.ofHours(8));
-        String format = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:00:00"));
+        Date date = new Date(now.toEpochSecond(ZoneOffset.ofHours(8)) * 1000L);
         ArbitrationPre arbitrationPre = arbitrationPres.stream()
-                .filter(i -> DateUtils.format(i.getActivation(), "yyyy-MM-dd HH:mm:ss")
-                        .equalsIgnoreCase(format))
+                //判断两个时间相差的秒数，为负数则是正确数据
+                .filter(i -> DateUtils.getDateSecond(i.getActivation(), date) < 0)
                 .findFirst().orElse(null);
         if (arbitrationPre == null) return null;
         GlobalStates.Arbitration arbitration = new GlobalStates.Arbitration();

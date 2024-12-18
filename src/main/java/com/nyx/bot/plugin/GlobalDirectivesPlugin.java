@@ -119,14 +119,12 @@ public class GlobalDirectivesPlugin {
                 case WARFRAME_CD_PLUGIN -> not(bot, event);
                 // XT
                 case WARFRAME_XT_PLUGIN -> not(bot, event);
-                // /WIKI
-                case WARFRAME_WIKI_PLUGIN -> not(bot, event);
                 // 佩兰
                 case WARFRAME_SISTER_PLUGIN -> not(bot, event);
                 //金银垃圾
                 case WARFRAME_MARKET_GOD_DUMP, WARFRAME_MARKET_SILVER_DUMP -> WarframeCodes.ducat(bot, event, codes);
                 //核桃
-                case WARFRAME_RELICS_PLUGIN -> not(bot, event);
+                case WARFRAME_RELICS_PLUGIN -> WarframeCodes.relics(bot, event);
                 //开核桃
                 case WARFRAME_OPEN_RELICS_PLUGIN -> not(bot, event);
                 //紫卡分析

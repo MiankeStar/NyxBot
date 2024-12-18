@@ -8,6 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 public class FileUtils {
@@ -26,6 +30,20 @@ public class FileUtils {
             log.error("read file error:{}", e.getMessage());
         }
         return new String(b, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 创建目录如果目录不存在
+     *
+     * @param file 文件
+     */
+    public static void createDir(File file) {
+        if (!file.exists() || !file.isDirectory()) {
+            File dir = file.getParentFile();
+            if (dir != null && !dir.exists()) {
+                dir.mkdirs();
+            }
+        }
     }
 
     /**
@@ -129,6 +147,20 @@ public class FileUtils {
             return true;
         }
         return flag;
+    }
+
+    /**
+     * 获取目录下所有的文件名
+     *
+     * @param path 路径
+     * @return 文件名数组
+     */
+    public static Optional<List<String>> getFilesName(String path) {
+        File file = new File(path);
+        if (file.isDirectory()) {
+            return Optional.of(Arrays.stream(Objects.requireNonNull(file.list())).toList());
+        }
+        return Optional.empty();
     }
 
     /**
